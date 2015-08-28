@@ -13,7 +13,7 @@ function transmitter() {
   }
 
   const push = (value) => {
-    subscriptions.forEach(subscription => subscription(value))
+    [...subscriptions].forEach(subscription => subscription(value))
   }
 
   return { subscribe, push, unsubscribe }

@@ -17,7 +17,7 @@ function transmitter() {
   };
 
   var push = function push(value) {
-    subscriptions.forEach(function (subscription) {
+    [].concat(subscriptions).forEach(function (subscription) {
       return subscription(value);
     });
   };
