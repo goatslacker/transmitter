@@ -2,7 +2,7 @@
 
 > Dead simple pub-sub
 
-It's 22 LOC of just subscribe and push.
+It's 35 LOC of just subscribe and push.
 
 ## API
 
