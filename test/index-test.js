@@ -48,5 +48,17 @@ export default {
   'unlisten dont exist'() {
     const bus = transmitter()
     bus.unsubscribe(function () { })
+  },
+
+  'unsubscribe while pushing'() {
+    const bus = transmitter()
+    const subscription = bus.subscribe(function () { subscription.dispose() })
+    const spy = sinon.spy()
+    bus.subscribe(spy)
+
+    bus.push(1);
+
+    assert(spy.calledOnce, 'spy should be called once.')
+    assert.equal(spy.callCount, 1, 'spy should be called exactly once.')
   }
 }
