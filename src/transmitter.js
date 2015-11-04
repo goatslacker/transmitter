@@ -1,7 +1,13 @@
 function transmitter() {
   const subscriptions = []
+  let pushing = false
+  let toUnsubscribe = []
 
   const unsubscribe = (onChange) => {
+    if (pushing) {
+      toUnsubscribe.push(onChange)
+      return
+    }
     const id = subscriptions.indexOf(onChange)
     if (id >= 0) subscriptions.splice(id, 1)
   }
@@ -13,10 +19,17 @@ function transmitter() {
   }
 
   const push = (value) => {
-    subscriptions.forEach(subscription => subscription(value))
+    if (pushing) throw new Error('Cannot push while pushing')
+    pushing = true
+    try {
+      subscriptions.forEach(subscription => subscription(value))
+    } finally {
+      pushing = false
+      toUnsubscribe = toUnsubscribe.filter(unsubscribe)
+    }
   }
 
-  return { subscribe, push, unsubscribe }
+  return { subscribe, push, unsubscribe, subscriptions }
 }
 
 module.exports = transmitter
