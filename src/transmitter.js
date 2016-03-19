@@ -19,7 +19,6 @@ function transmitter() {
   }
 
   const push = (value) => {
-    if (pushing) throw new Error('Cannot push while pushing')
     pushing = true
     try {
       subscriptions.forEach(subscription => subscription(value))
