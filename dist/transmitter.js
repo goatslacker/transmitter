@@ -1,42 +1,48 @@
-'use strict';
+"use strict";
 
 function transmitter() {
   var subscriptions = [];
-  var pushing = false;
-  var toUnsubscribe = [];
+  var nowDispatching = false;
+  var toUnsubscribe = {};
 
-  var unsubscribe = function unsubscribe(onChange) {
-    if (pushing) {
-      toUnsubscribe.push(onChange);
+  var unsubscribe = function unsubscribe(id) {
+    if (nowDispatching) {
+      toUnsubscribe[id] = 1;
       return;
     }
-    var id = subscriptions.indexOf(onChange);
-    if (id >= 0) subscriptions.splice(id, 1);
+    subscriptions.splice(id, 1);
   };
 
   var subscribe = function subscribe(onChange) {
-    subscriptions.push(onChange);
+    var id = subscriptions.push(onChange);
     var dispose = function dispose() {
-      return unsubscribe(onChange);
+      return unsubscribe(id - 1);
     };
     return { dispose: dispose };
   };
 
-  var push = function push(value) {
-    if (pushing) throw new Error('Cannot push while pushing');
-    pushing = true;
+  var publish = function publish() {
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    nowDispatching = true;
     try {
-      subscriptions.forEach(function (subscription) {
-        return subscription(value);
+      subscriptions.forEach(function (subscription, id) {
+        return toUnsubscribe[id] || subscription.apply(undefined, args);
       });
     } finally {
-      pushing = false;
-      toUnsubscribe = toUnsubscribe.filter(unsubscribe);
+      nowDispatching = false;
+      Object.keys(toUnsubscribe).forEach(unsubscribe);
+      toUnsubscribe = {};
     }
   };
 
-  return { subscribe: subscribe, push: push, unsubscribe: unsubscribe, subscriptions: subscriptions };
+  return {
+    publish: publish,
+    subscribe: subscribe,
+    $subscriptions: subscriptions
+  };
 }
 
 module.exports = transmitter;
-

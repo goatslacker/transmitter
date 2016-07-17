@@ -4,11 +4,11 @@
   "description": "",
   "main": "dist/transmitter.js",
   "scripts": {
-    "build": "babel src --out-dir dist",
+    "build": "babel src -d dist",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- -u exports -R tap --require ./test/babel test/*-test.js",
     "prepublish": "npm run build",
     "test": "npm run tests-node",
-    "tests-node": "mocha -u exports -R nyan --require ./test/babel test/*-test.js"
+    "tests-node": "mocha -u exports -R tap --require ./test/babel test/*-test.js"
   },
   "keywords": [
     "transmit",

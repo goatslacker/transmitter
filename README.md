@@ -2,15 +2,13 @@
 
 > Dead simple pub-sub
 
-It's 35 LOC of just subscribe and push.
-
 ## API
 
-### subscribe(onChange: function): { dispose: (): void }
+### subscribe(onChange: () => any): { dispose: () => void }
 
 Subscribes to change events. Returns an object which contains the method `dispose` which removes the current subscription.
 
-### push(payload: any): void
+### publish(...payload: any): void
 
 Emit a change to all the subscribers.
 
@@ -21,7 +19,7 @@ const bus = transmitter()
 
 bus.subscribe(result => console.log(result))
 
-bus.push({ foo: 'bar' })
+bus.publish({ foo: 'bar' })
 ```
 
 ## License

@@ -6,8 +6,8 @@ export default {
   'functions exist'() {
     const bus = transmitter()
     assert.isFunction(bus.subscribe)
-    assert.isFunction(bus.push)
-    assert.isFunction(bus.unsubscribe)
+    assert.isFunction(bus.publish)
+    assert.isUndefined(bus.unsubscribe)
   },
 
   'can listen and dispose'() {
@@ -19,13 +19,13 @@ export default {
     assert.isUndefined(undef)
   },
 
-  'pushing'() {
+  'publishing'() {
     const bus = transmitter()
     const spy = sinon.spy()
 
     const subscription = bus.subscribe(spy)
 
-    bus.push('hello')
+    bus.publish('hello')
 
     assert.ok(spy.calledOnce)
     assert(spy.firstCall.args[0] === 'hello')
@@ -36,32 +36,26 @@ export default {
   'unsub shortcut'() {
     const bus = transmitter()
     const spy = sinon.spy()
-    bus.subscribe(spy)
-    bus.unsubscribe(spy)
+    const x = bus.subscribe(spy)
+    x.dispose()
 
-    bus.push(1)
+    bus.publish(1)
 
-    assert.notOk(spy.calledOnce)
     assert(spy.callCount === 0)
   },
 
-  'unlisten dont exist'() {
-    const bus = transmitter()
-    bus.unsubscribe(function () { })
-  },
-
-  'unsubscribe while pushing'() {
+  'unsubscribe while publishing'() {
     const bus = transmitter()
     const subscription = bus.subscribe(() => subscription.dispose())
     const spy = sinon.spy()
     bus.subscribe(spy)
 
-    bus.push(1)
+    bus.publish(1)
 
     assert(spy.calledOnce, 'spy was called once')
   },
 
-  'unsubscribe and pushing while pushing'() {
+  'unsubscribed while publishing'() {
     const spy1 = sinon.spy()
 
     const bus = transmitter()
@@ -73,9 +67,7 @@ export default {
     const spy2 = sinon.spy()
     bus.subscribe(spy2)
 
-    bus.subscribe(() => bus.push(2))
-
-    assert.throws(() => bus.push(1), Error)
+    bus.publish(1)
 
     assert(spy1.calledOnce, 'spy1 was called once')
     assert(spy2.calledOnce, 'spy2 was called once')
@@ -92,14 +84,33 @@ export default {
       throw new Error('oops')
     })
 
-    assert(bus.subscriptions.length === 2)
+    assert(bus.$subscriptions.length === 2)
 
     try {
-      bus.push(1)
+      bus.publish(1)
     } catch (err) {
       // ignore error on purpose
     } finally {
-      assert(bus.subscriptions.length === 1)
+      assert(bus.$subscriptions.length === 1)
     }
+  },
+
+  'does not call a subscription if its unsubscribed'() {
+    const bus = transmitter()
+    const spy = sinon.spy()
+
+    let sub = null
+
+    bus.subscribe(() => {
+      sub.dispose()
+    })
+
+    sub = bus.subscribe(() => {
+      spy()
+    })
+
+    bus.publish(33)
+
+    assert(spy.callCount === 0)
   },
 }

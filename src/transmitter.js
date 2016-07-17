@@ -1,34 +1,40 @@
 function transmitter() {
   const subscriptions = []
-  let pushing = false
-  let toUnsubscribe = []
+  let nowDispatching = false
+  let toUnsubscribe = {}
 
-  const unsubscribe = (onChange) => {
-    if (pushing) {
-      toUnsubscribe.push(onChange)
+  const unsubscribe = (id) => {
+    if (nowDispatching) {
+      toUnsubscribe[id] = 1
       return
     }
-    const id = subscriptions.indexOf(onChange)
-    if (id >= 0) subscriptions.splice(id, 1)
+    subscriptions.splice(id, 1)
   }
 
   const subscribe = (onChange) => {
-    subscriptions.push(onChange)
-    const dispose = () => unsubscribe(onChange)
+    const id = subscriptions.push(onChange)
+    const dispose = () => unsubscribe(id - 1)
     return { dispose }
   }
 
-  const push = (value) => {
-    pushing = true
+  const publish = (...args) => {
+    nowDispatching = true
     try {
-      subscriptions.forEach(subscription => subscription(value))
+      subscriptions.forEach(
+        (subscription, id) => toUnsubscribe[id] || subscription(...args)
+      )
     } finally {
-      pushing = false
-      toUnsubscribe = toUnsubscribe.filter(unsubscribe)
+      nowDispatching = false
+      Object.keys(toUnsubscribe).forEach(unsubscribe)
+      toUnsubscribe = {}
     }
   }
 
-  return { subscribe, push, unsubscribe, subscriptions }
+  return {
+    publish,
+    subscribe,
+    $subscriptions: subscriptions,
+  }
 }
 
 module.exports = transmitter
