@@ -5,9 +5,11 @@ function transmitter() {
   var nowDispatching = false;
   var toUnsubscribe = {};
 
-  var unsubscribe = function unsubscribe(id) {
+  var unsubscribe = function unsubscribe(onChange) {
+    var id = subscriptions.indexOf(onChange);
+    if (id < 0) return;
     if (nowDispatching) {
-      toUnsubscribe[id] = 1;
+      toUnsubscribe[id] = onChange;
       return;
     }
     subscriptions.splice(id, 1);
@@ -16,7 +18,7 @@ function transmitter() {
   var subscribe = function subscribe(onChange) {
     var id = subscriptions.push(onChange);
     var dispose = function dispose() {
-      return unsubscribe(id - 1);
+      return unsubscribe(onChange);
     };
     return { dispose: dispose };
   };
@@ -33,7 +35,9 @@ function transmitter() {
       });
     } finally {
       nowDispatching = false;
-      Object.keys(toUnsubscribe).forEach(unsubscribe);
+      Object.keys(toUnsubscribe).forEach(function (id) {
+        return unsubscribe(toUnsubscribe[id]);
+      });
       toUnsubscribe = {};
     }
   };

@@ -113,4 +113,24 @@ export default {
 
     assert(spy.callCount === 0)
   },
+
+  'unsubscribing while in a subscription'() {
+    const bus = transmitter()
+    const spy1 = sinon.spy()
+    const spy2 = sinon.spy()
+
+    const a = bus.subscribe(spy1)
+    const b = bus.subscribe(spy2)
+    const c = bus.subscribe(() => {
+      a.dispose()
+      b.dispose()
+      c.dispose()
+    })
+
+    bus.publish({})
+    bus.publish({})
+
+    assert.ok(spy1.calledOnce)
+    assert.ok(spy2.calledOnce)
+  },
 }

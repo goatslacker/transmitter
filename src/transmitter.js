@@ -3,9 +3,11 @@ function transmitter() {
   let nowDispatching = false
   let toUnsubscribe = {}
 
-  const unsubscribe = (id) => {
+  const unsubscribe = (onChange) => {
+    const id = subscriptions.indexOf(onChange)
+    if (id < 0) return
     if (nowDispatching) {
-      toUnsubscribe[id] = 1
+      toUnsubscribe[id] = onChange
       return
     }
     subscriptions.splice(id, 1)
@@ -13,7 +15,7 @@ function transmitter() {
 
   const subscribe = (onChange) => {
     const id = subscriptions.push(onChange)
-    const dispose = () => unsubscribe(id - 1)
+    const dispose = () => unsubscribe(onChange)
     return { dispose }
   }
 
@@ -25,7 +27,7 @@ function transmitter() {
       )
     } finally {
       nowDispatching = false
-      Object.keys(toUnsubscribe).forEach(unsubscribe)
+      Object.keys(toUnsubscribe).forEach(id => unsubscribe(toUnsubscribe[id]))
       toUnsubscribe = {}
     }
   }
